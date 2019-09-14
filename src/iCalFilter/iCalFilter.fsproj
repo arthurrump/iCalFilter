@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <None Include="web.config" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="WebRoot\**\*">
+    <Content Include="wwwroot\**\*">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
