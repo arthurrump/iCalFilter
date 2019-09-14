@@ -1,6 +1,6 @@
 function getCustomUrl() {
     console.log("click");
-    var host = document.getElementsByTagName("html").getAttribute("data-host");
+    var host = document.getElementsByTagName("html")[0].getAttribute("data-host");
     var path = "/filter";
     var icalUrl = encodeURIComponent(document.getElementById("ical-url").value);
     var days = "";
