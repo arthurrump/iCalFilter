@@ -51,14 +51,15 @@ let handleFilter : HttpHandler = fun next ctx -> task {
                 let! data = resp.Content.ReadAsStringAsync()
                 if resp.IsSuccessStatusCode then
                     let ical = Calendar.Load(data)
-                    let newIcal = Calendar()
-
-                    ical.Events 
-                    |> Seq.filter (fun ev -> days |> List.contains ev.DtStart.DayOfWeek)
-                    |> newIcal.Events.AddRange
+                    let events = 
+                        ical.Events 
+                        |> Seq.filter (fun ev -> days |> List.contains ev.DtStart.DayOfWeek)
+                        |> Seq.toList
+                    ical.Events.Clear()
+                    ical.Events.AddRange(events)
 
                     let serializer = CalendarSerializer()
-                    return! Successful.ok (text (serializer.SerializeToString(newIcal))) next ctx
+                    return! Successful.ok (text (serializer.SerializeToString(ical))) next ctx
                 else 
                     let resp = sprintf "Received status %O from %s. Original content follows.\n\n%s" resp.StatusCode url data
                     return! ServerErrors.badGateway (text resp) next ctx
