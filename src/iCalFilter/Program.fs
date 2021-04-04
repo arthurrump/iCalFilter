@@ -3,6 +3,7 @@ module iCalFilter.App
 open System
 open System.Net
 open System.Net.Http
+open System.Text.RegularExpressions
 open Microsoft.AspNetCore
 open Microsoft.AspNetCore.Builder
 open Microsoft.AspNetCore.Cors.Infrastructure
@@ -33,6 +34,23 @@ module List =
 let handleFilter : HttpHandler = fun next ctx -> task {
     let url = ctx.TryGetQueryStringValue("url")
     let days = ctx.TryGetQueryStringValue("days")
+    let nameRegex = ctx.TryGetQueryStringValue("nameregex")
+    let descriptionRegex = ctx.TryGetQueryStringValue("descriptionregex")
+
+    let optRegexFilter regex evFieldSelector events =
+        match regex with
+        | Some regex ->
+            events 
+            |> Seq.filter (fun ev -> 
+                Regex.IsMatch(
+                    evFieldSelector ev, 
+                    regex, 
+                    RegexOptions.CultureInvariant ||| RegexOptions.ExplicitCapture, 
+                    TimeSpan.FromMilliseconds(300.)
+                ))
+        | None ->
+            events
+
     match url, days with
     | Some url, Some days ->
         let url = WebUtility.UrlDecode(url)
@@ -55,6 +73,8 @@ let handleFilter : HttpHandler = fun next ctx -> task {
                     let events = 
                         ical.Events 
                         |> Seq.filter (fun ev -> days |> List.contains ev.DtStart.DayOfWeek)
+                        |> optRegexFilter nameRegex (fun ev -> ev.Name)
+                        |> optRegexFilter descriptionRegex (fun ev -> ev.Description)
                         |> Seq.toList
                     ical.Events.Clear()
                     ical.Events.AddRange(events)
@@ -89,6 +109,14 @@ let index (ctx : HttpContext) =
                         let id = sprintf "day-%i" (int day)
                         yield input [ _type "checkbox"; _id id ]
                         yield label [ _for id ] [ str (string day) ]
+                ]
+                fieldset [] [
+                    legend [] [ str "Name and description matching" ]
+                    label [ _for "name-regex" ] [ str "Name matching regex" ]
+                    input [ _type "text"; _id "name-regex" ]
+                    br []
+                    label [ _for "description-regex" ] [ str "Description matching regex" ]
+                    input [ _type "text"; _id "description-regex" ]
                 ]
                 button [ _type "button"; _onclick "getCustomUrl()" ] [
                     str "Create Url"
