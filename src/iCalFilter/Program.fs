@@ -9,6 +9,7 @@ open Microsoft.AspNetCore.Cors.Infrastructure
 open Microsoft.AspNetCore.Hosting
 open Microsoft.AspNetCore.Http
 open Microsoft.Extensions.Configuration
+open Microsoft.Extensions.Hosting
 open Microsoft.Extensions.Logging
 open Microsoft.Extensions.DependencyInjection
 open Giraffe
@@ -114,13 +115,13 @@ let errorHandler (ex : Exception) (logger : ILogger) =
     clearResponse >=> ServerErrors.internalError (text ex.Message)
 
 let configureCors (config : IConfiguration) (cors : CorsPolicyBuilder) =
-    cors.WithOrigins([| config.GetValue("host") |])
+    cors.AllowAnyOrigin()
         .WithMethods("GET")
         .AllowAnyHeader()
         |> ignore
 
 let configureApp (app : IApplicationBuilder) =
-    let env = app.ApplicationServices.GetService<IHostingEnvironment>()
+    let env = app.ApplicationServices.GetService<IHostEnvironment>()
     let config = app.ApplicationServices.GetService<IConfiguration>()
 
     let useErrorHandler (app : IApplicationBuilder) = 
