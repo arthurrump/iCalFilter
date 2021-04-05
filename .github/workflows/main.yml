@@ -32,4 +32,4 @@ jobs:
         with:
           pull: true
           push: true
-          tags: arthurrump/icalfilter:latest
+          tags: ghcr.io/arthurrump/icalfilter:latest
